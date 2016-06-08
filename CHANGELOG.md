@@ -1,6 +1,7 @@
-<a name="1.1.0"></a>
-# 1.1.0 (2016-06-08)
+<a name="1.0.0"></a>
+# 1.0.0 (2016-06-08)
 
+* docs(changelog): update changelog ([21fcb63](https://github.com/daptiv/daptiv-metrics-logger/commit/21fcb63))
 * docs(changelog): update changelog ([bbe183a](https://github.com/daptiv/daptiv-metrics-logger/commit/bbe183a))
 * docs(changelog): update changelog ([334cdd9](https://github.com/daptiv/daptiv-metrics-logger/commit/334cdd9))
 * first commit ([dac4186](https://github.com/daptiv/daptiv-metrics-logger/commit/dac4186))
