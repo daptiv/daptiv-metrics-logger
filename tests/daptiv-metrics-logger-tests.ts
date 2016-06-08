@@ -4,6 +4,7 @@ describe('DaptivMetricsLogger', () => {
     let logger: DaptivMetricsLogger;
     let loggerOpts: DaptivMetricsLoggerOpts;
     let loggerSpy;
+    let defaultSampleRate = 1;
 
     beforeEach(() => {
         loggerSpy = jasmine.createSpyObj('loggerSpy', ['timing', 'increment', 'gauge']);
@@ -15,26 +16,26 @@ describe('DaptivMetricsLogger', () => {
         let key = 'test.key';
         let value = 29;
 
-        logger.gauge(key, value);
+        logger.gauge(key, value, ['tag']);
 
-        expect(loggerSpy.gauge).toHaveBeenCalledWith(key, value, undefined, undefined);
+        expect(loggerSpy.gauge).toHaveBeenCalledWith(key, value, defaultSampleRate, ['tag']);
     });
 
     it('increment should call through to statsd-client.increment', () => {
         let key = 'test.key';
 
-        logger.increment(key);
+        logger.increment(key, ['tag']);
 
-        expect(loggerSpy.increment).toHaveBeenCalledWith(key, undefined, undefined);
+        expect(loggerSpy.increment).toHaveBeenCalledWith(key, defaultSampleRate, ['tag']);
     });
 
     it('timing should call through to statsd-client.timing', () => {
         let key = 'test.key';
         let value = 37;
 
-        logger.timing(key, value, undefined, undefined);
+        logger.timing(key, value, ['tag']);
 
-        expect(loggerSpy.timing).toHaveBeenCalledWith(key, value, undefined, undefined);
+        expect(loggerSpy.timing).toHaveBeenCalledWith(key, value, defaultSampleRate, ['tag']);
     });
 
     describe('when prefix option is provided', () => {
@@ -51,35 +52,35 @@ describe('DaptivMetricsLogger', () => {
 
             loggerOpts = {host: 'test.test.com', statsd: loggerSpy, prefix: oddPrefix};
             logger = new DaptivMetricsLogger(loggerOpts);
-            logger.increment(key);
+            logger.increment(key, ['tag']);
 
-            expect(loggerSpy.increment).toHaveBeenCalledWith(`${formattedPrefix}.${key}`, undefined, undefined);
+            expect(loggerSpy.increment).toHaveBeenCalledWith(`${formattedPrefix}.${key}`, defaultSampleRate, ['tag']);
         });
 
         it('gauge should prefix key with env key', () => {
             let key = 'test.key';
             let value = 29;
 
-            logger.gauge(key, value);
+            logger.gauge(key, value, ['tag']);
 
-            expect(loggerSpy.gauge).toHaveBeenCalledWith(`${prefix}.${key}`, value, undefined, undefined);
+            expect(loggerSpy.gauge).toHaveBeenCalledWith(`${prefix}.${key}`, value, defaultSampleRate, ['tag']);
         });
 
         it('increment should prefix key with env key', () => {
             let key = 'test.key';
 
-            logger.increment(key);
+            logger.increment(key, ['tag']);
 
-            expect(loggerSpy.increment).toHaveBeenCalledWith(`${prefix}.${key}`, undefined, undefined);
+            expect(loggerSpy.increment).toHaveBeenCalledWith(`${prefix}.${key}`, defaultSampleRate, ['tag']);
         });
 
         it('timing should prefix key with env key', () => {
             let key = 'test.key';
             let value = 37;
 
-            logger.timing(key, value);
+            logger.timing(key, value, ['tag']);
 
-            expect(loggerSpy.timing).toHaveBeenCalledWith(`${prefix}.${key}`, value, undefined, undefined);
+            expect(loggerSpy.timing).toHaveBeenCalledWith(`${prefix}.${key}`, value, defaultSampleRate, ['tag']);
         });
     });
 });

@@ -5,6 +5,7 @@ export interface DaptivMetricsLoggerOpts {
     port?: number;
     socket?: string;
     prefix?: string;
+    sampleRate?: number;
     globalTags?: string[];
     statsd?: StatsD;
 }
@@ -12,29 +13,31 @@ export interface DaptivMetricsLoggerOpts {
 export class DaptivMetricsLogger {
     private client: StatsD;
     private prefix: string;
+    private sampleRate: number;
 
     constructor(options: DaptivMetricsLoggerOpts) {
         this.prefix = this.standardizeKey(options.prefix);
+        this.sampleRate = options.sampleRate || 1;
         // TODO: Remove this constructor, create a factory
         this.client = options.statsd || new StatsD(options.host, options.port, options.socket, { global_tags: options.globalTags });
     }
 
     // TODO: Get sample rates from configuration.
-    timing(statName: string, msDuration: number, sample_rate?: number, tags?: string[]): void {
-      this.client.timing(this.decorateStatName(statName), msDuration, sample_rate, tags);
+    timing(statName: string, msDuration: number, tags?: string[]): void {
+      this.client.timing(this.decorateStatName(statName), msDuration, this.sampleRate, tags);
     }
 
-    increment(statName: string, sample_rate?: number, tags?: string[]): void {
-      this.client.increment(this.decorateStatName(statName), sample_rate, tags);
+    increment(statName: string, tags?: string[]): void {
+      this.client.increment(this.decorateStatName(statName), this.sampleRate, tags);
     }
 
     incrementBy(statName: string, value: number, tags?: string[]): void {
       this.client.incrementBy(this.decorateStatName(statName), value, tags);
     }
 
-    decrement(statName: string, sample_rate?: number, tags?: string[]): void {
+    decrement(statName: string, tags?: string[]): void {
       // TODO: Expected sample rate always between 0 and 1
-      this.client.decrement(this.decorateStatName(statName), sample_rate, tags);
+      this.client.decrement(this.decorateStatName(statName), this.sampleRate, tags);
     }
 
     decrementBy(statName: string, value: number, tags?: string[]): void {
@@ -42,8 +45,8 @@ export class DaptivMetricsLogger {
       this.client.decrementBy(this.decorateStatName(statName), value, tags);
     }
 
-    gauge(statName: string, value: number, sample_rate?: number, tags?: string[]): void {
-      this.client.gauge(this.decorateStatName(statName), value, sample_rate, tags);
+    gauge(statName: string, value: number, tags?: string[]): void {
+      this.client.gauge(this.decorateStatName(statName), value, this.sampleRate, tags);
     }
 
     close(): void {
