@@ -1,68 +1,78 @@
-import { StatsD } from 'node-dogstatsd';
+export interface MetricsClient {
+  timing(stat: string, msDuration: number, sample_rate?: number, tags?: string[]): void;
+
+  increment(statName: string, value?: number, sample_rate?: number, tags?: string[]): void;
+
+  decrement(statName: string, value?: number, sample_rate?: number, tags?: string[]): void;
+
+  gauge(statName: string, value: number, sample_rate?: number, tags?: string[]): void;
+
+  histogram(statName: string, value: number, sample_rate?: number, tags?: string[]): void;
+
+  close(): void;
+}
 
 export interface DaptivMetricsLoggerOpts {
-    host: string;
-    port?: number;
-    socket?: string;
     prefix?: string;
-    sampleRate?: number;
     globalTags?: string[];
-    statsd?: StatsD;
+    metricsClient: MetricsClient;
 }
 
 export class DaptivMetricsLogger {
-    private client: StatsD;
+    private metricsClient: MetricsClient;
     private prefix: string;
-    private sampleRate: number;
+    private globalTags: string[];
 
     constructor(options: DaptivMetricsLoggerOpts) {
-        this.prefix = this.standardizeKey(options.prefix);
-        this.sampleRate = options.sampleRate || 1;
-        // TODO: Remove this constructor, create a factory
-        this.client = options.statsd || new StatsD(options.host, options.port, options.socket, { global_tags: options.globalTags });
+        this.prefix = this.cleanStatName(options.prefix);
+        if (!options.metricsClient) {
+          throw new Error('Metrics will not be logged. No metrics client was provided to the DaptivMetricsLogger');
+        }
+        this.metricsClient = options.metricsClient;
+        this.globalTags = (options.globalTags || []).map(this.cleanStatName);
     }
 
-    // TODO: Get sample rates from configuration.
-    timing(statName: string, msDuration: number, tags?: string[]): void {
-      this.client.timing(this.decorateStatName(statName), msDuration, this.sampleRate, tags);
+    timing(statName: string, msDuration: number, sampleRate?: number, tags?: string[]): void {
+      this.metricsClient.timing(this.decorateStatName(statName), msDuration, sampleRate || 1, this.mergeWithGlobalTags(tags));
     }
 
-    increment(statName: string, tags?: string[]): void {
-      this.client.increment(this.decorateStatName(statName), this.sampleRate, tags);
+    increment(statName: string, value?: number, sampleRate?: number, tags?: string[]): void {
+      this.metricsClient.increment(this.decorateStatName(statName), value || 1, sampleRate || 1, this.mergeWithGlobalTags(tags));
     }
 
-    incrementBy(statName: string, value: number, tags?: string[]): void {
-      this.client.incrementBy(this.decorateStatName(statName), value, tags);
+    decrement(statName: string, value?: number, sampleRate?: number, tags?: string[]): void {
+      this.metricsClient.decrement(this.decorateStatName(statName), value || 1, sampleRate || 1, this.mergeWithGlobalTags(tags));
     }
 
-    decrement(statName: string, tags?: string[]): void {
-      // TODO: Expected sample rate always between 0 and 1
-      this.client.decrement(this.decorateStatName(statName), this.sampleRate, tags);
+    gauge(statName: string, value: number, sampleRate?: number, tags?: string[]): void {
+      this.metricsClient.gauge(this.decorateStatName(statName), value, sampleRate || 1, this.mergeWithGlobalTags(tags));
     }
 
-    decrementBy(statName: string, value: number, tags?: string[]): void {
-      // TODO: Are negative, positive, or both expected?
-      this.client.decrementBy(this.decorateStatName(statName), value, tags);
-    }
-
-    gauge(statName: string, value: number, tags?: string[]): void {
-      this.client.gauge(this.decorateStatName(statName), value, this.sampleRate, tags);
+    histogram(statName, value: number, sampleRate?: number, tags?: string[]): void {
+      this.metricsClient.histogram(this.decorateStatName(statName), value, sampleRate || 1, this.mergeWithGlobalTags(tags));
     }
 
     close(): void {
-      this.client.close();
+      this.metricsClient.close();
     }
 
-    private decorateStatName(key: string): string {
-        return !this.prefix
-            ? key
-            : `${this.prefix}.${key}`;
+    private mergeWithGlobalTags(tags: string[]): string[] {
+      return tags
+        ? this.globalTags.concat(tags.map(this.cleanStatName))
+        : this.globalTags;
     }
 
-    private standardizeKey(prefix: string): string {
-        if (!prefix) {
-            return null;
+    private decorateStatName(statName: string): string {
+      let cleanStatName = this.cleanStatName(statName);
+      return !this.prefix
+          ? cleanStatName
+          : `${this.prefix}.${cleanStatName}`;
+    }
+
+    private cleanStatName(statName: string): string {
+        if (!statName) {
+            return statName;
         }
-        return prefix.toLowerCase().replace(/[^a-z0-9\.]/g, '_');
+        return statName.toLowerCase().replace(/[^a-z0-9\.]/g, '_');
     }
 }

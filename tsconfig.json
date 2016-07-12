@@ -3,7 +3,7 @@
         "declaration": true,
         "module": "commonjs",
         "outDir": "dist/",
-        "sourceMap": true,
+        "sourceMap": false,
         "target": "es6"
     },
     "buildOnSave": false,

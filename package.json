@@ -5,7 +5,7 @@
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
   "scripts": {
-    "build": "npm run typings && tsc -p .",
+    "build": "npm run clean && npm run typings && tsc -p . --module commonjs --declaration --outDir dist/",
     "changelog": "conventional-changelog -p daptiv-metrics-logger -i CHANGELOG.md -s -r 0",
     "changelog:git:add": "git add CHANGELOG.md",
     "changelog:git:commit": "git commit -m 'docs(changelog): update changelog'",
@@ -31,8 +31,7 @@
   ],
   "keywords": [
     "metrics",
-    "statsd",
-    "api"
+    "statsd"
   ],
   "license": "ISC",
   "bugs": {
@@ -40,7 +39,6 @@
   },
   "homepage": "https://github.com/daptiv/daptiv-metrics-logger#readme",
   "dependencies": {
-    "node-dogstatsd": "0.0.6"
   },
   "devDependencies": {
     "conventional-changelog-cli": "^1.1.1",
