@@ -2,8 +2,8 @@
   "name": "daptiv-metrics-logger",
   "version": "1.1.0",
   "description": "",
-  "main": "dist/src/index.js",
-  "typings": "dist/src/index.d.ts",
+  "main": "dist/src/daptiv-metrics-logger.js",
+  "typings": "dist/src/daptiv-metrics-logger.d.ts",
   "scripts": {
     "build": "npm run clean && npm run typings && tsc -p . --module commonjs --declaration --outDir dist/",
     "changelog": "conventional-changelog -p daptiv-metrics-logger -i CHANGELOG.md -s -r 0",
